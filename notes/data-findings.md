@@ -55,3 +55,19 @@ meaningful because of the contextual header, e.g. "AI Act Art. 16 – Obligation
 AI systems / (l) ensure … accessibility requirements". Ideas to *measure* in Phase 9 rather than guess now:
 (1) merge small tails into the previous chunk, (2) repeat a list's lead-in sentence ("Providers … shall:")
 in chunks that start mid-list, (3) a smaller cap (e.g. 200) versus 380.
+
+# Database findings (Phase 3)
+
+PostgreSQL 17.11 + pgvector 0.8.7 (`pgvector/pgvector:pg17`), port bound to 127.0.0.1 only.
+One table, two search indexes: GIN on the generated `tsvector` (keywords) and HNSW with
+`vector_cosine_ops` (meaning). The schema runs from `docker-entrypoint-initdb.d`, so
+`docker compose down -v && docker compose up -d` rebuilds everything (checked).
+
+**Stemming is useful but imperfect** (why we need hybrid search):
+- EN: "processed" and "processing" → `process` ✓, but "notified" → `notifi` and "notification" → `notif` (no match).
+- DE: "Verarbeitung" → `verarbeit`, but "verarbeitet" stays `verarbeitet`; "meldet" ≠ "Meldung".
+  (The guide claims all German forms collapse to `verarbeit`; the Snowball stemmer does not do that.)
+
+**AND semantics:** `websearch_to_tsquery('english', 'When must a data breach be reported?')` →
+`'must' & 'data' & 'breach' & 'report'` (every word required). Phase 5 converts it to OR (`|`) and lets
+`ts_rank_cd` reward chunks that match more terms.
