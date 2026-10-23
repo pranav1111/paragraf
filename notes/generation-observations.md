@@ -41,3 +41,19 @@ judicial capacity), (b) core activities = large-scale regular and systematic mon
 (c) core activities = large-scale processing of special categories (Art. 9) or criminal data (Art. 10)."
 Corpus note: in Germany § 38 BDSG additionally requires a DPO when ≥ 20 persons regularly process personal
 data automatically; Paragraf cannot know this because the BDSG is not in the corpus (stretch goal).
+
+## Scope error (found while testing the API, 2026-10-23)
+"What fines can the AI Act impose for prohibited practices?" → answered "up to EUR 1 500 000" (Art. 100,
+which applies only to **Union institutions, bodies, offices and agencies**). The general rule, Art. 99(3):
+**up to EUR 35 000 000 or 7% of worldwide annual turnover**, was retrieved as source [2] (reranker 0.957,
+chunk AIACT-en-art99-c0) but ignored; the answer cited [2] only for the EUR 15 000 000 / 3% tier of Art. 99(4).
+Retrieval was fine; generation applied a true fact to the wrong addressee. The citation check passes because
+every number appears in a cited source → only a reference-based correctness judge catches this.
+Deliberately **not** fixed by tuning the prompt on this one example (overfitting to anecdotes); added as a
+gold-set case. Phase 9 candidates, measured on the whole set: (1) prompt rule "state who each rule applies
+to when sources cover different addressees", (2) a larger/newer generator model.
+
+## Citation coverage (seen in the web UI, 2026-10-23)
+"Which AI practices are prohibited?" → an 8-item numbered list with all citations at the very end
+("[1][2][3]") instead of after each item (rule 1). Readers cannot tell which item comes from which source.
+Phase 9 metric: citation coverage = share of sentences/list items that end with a citation.
