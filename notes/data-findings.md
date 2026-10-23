@@ -71,3 +71,22 @@ One table, two search indexes: GIN on the generated `tsvector` (keywords) and HN
 **AND semantics:** `websearch_to_tsquery('english', 'When must a data breach be reported?')` →
 `'must' & 'data' & 'breach' & 'report'` (every word required). Phase 5 converts it to OR (`|`) and lets
 `ts_rank_cd` reward chunks that match more terms.
+
+# Embedding findings (Phase 4)
+
+**Performance:** 1,058 chunks embedded with bge-m3 in **44 s on the Apple GPU (mps), ~24 chunks/s**;
+1024-dimensional, normalised vectors (length 1.0000). Query embedding ~120 ms warm (~500 ms for the
+first call), vector search 4–11 ms. Re-running the indexer keeps 1,058 rows (idempotent upsert).
+
+**Dense-only preview** (before hybrid search and reranking):
+| Question | Top hit |
+|---|---|
+| "Wann muss eine Datenpanne gemeldet werden?" | GDPR-de-art33-c0 (0.62), then its EN twin |
+| "How fast do I have to tell the regulator when hackers steal customer data?" (paraphrase, no shared keywords) | GDPR-en-art33-c0 (0.63) |
+| "Which AI practices are banned?" | AIACT-en-art5-c0 (0.71) |
+Two things Phase 5 must handle: **language twins** (DE and EN of the same chunk take two of the five
+slots) and **several chunks of the same article** crowding the top results.
+
+**Planner gotcha:** right after the bulk upsert, `EXPLAIN` showed a full `Sort` instead of the HNSW index,
+because table statistics were stale (estimated 2,110 rows after the re-run). After `ANALYZE chunks`, the
+plan uses `Index Scan using chunks_embedding_idx`. The indexer now runs `ANALYZE` after loading.

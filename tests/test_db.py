@@ -32,3 +32,14 @@ def test_tsvector_is_generated_with_language_specific_stemming(conn):
         tsv = dict(conn.execute("SELECT lang, tsv::text FROM chunks WHERE id LIKE 't-%'").fetchall())
     assert "'process'" in tsv["en"]
     assert "'verarbeit'" in tsv["de"]
+
+
+def test_index_is_complete_and_normalised(conn):
+    total = conn.execute("SELECT count(*) FROM chunks").fetchone()[0]
+    if total == 0:
+        pytest.skip("index is empty (run python -m paragraf.index)")
+    per_lang = dict(conn.execute("SELECT lang, count(*) FROM chunks GROUP BY lang").fetchall())
+    assert per_lang["en"] == per_lang["de"]
+    assert conn.execute("SELECT count(*) FROM chunks WHERE embedding IS NULL").fetchone()[0] == 0
+    lo, hi = conn.execute("SELECT min(vector_norm(embedding)), max(vector_norm(embedding)) FROM chunks").fetchone()
+    assert abs(lo - 1) < 1e-3 and abs(hi - 1) < 1e-3          # normalised: cosine == dot product
