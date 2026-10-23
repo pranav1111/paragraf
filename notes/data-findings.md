@@ -34,3 +34,24 @@ The project first lived in `~/Desktop/Work`, which is synced to iCloud Drive. iC
 flag on files in `.venv` (Python ignores hidden `.pth` files, so `import paragraf` broke), then overwrote a
 symlink workaround with its own cloud copy and created a `.venv 2` conflict copy. Fix: the code repos now
 live in `~/Developer` (not synced by iCloud). GitHub is the backup for code; iCloud is for documents.
+
+# Chunking findings (Phase 2)
+
+**Measured first** (bge-m3 tokenizer): median article 342 tokens (EN) / 380 (DE), longest 3,688 / 4,265;
+about half the articles exceed the 380-token cap; **no single paragraph exceeds it** (longest 249), so no
+paragraph ever has to be cut. German needs roughly 10–20% more tokens than English for the same text.
+
+**Aligned twins.** Because EN and DE have identical paragraph structure (Phase 1), the split points are
+chosen once per article pair using the larger token count per paragraph, and applied to both languages.
+Result: `GDPR-en-art33-c1` and `GDPR-de-art33-c1` always contain the same paragraphs, which Phase 5's
+language-twin removal depends on. Chunking each language separately would split them differently.
+
+**Result:** 1,058 chunks (171 / 255 / 103 per law and language), median 293 tokens, p10 93, p90 366,
+max 413 (cap + header). 0 twin mismatches. This is below the guide's rough estimate of 1,200–2,000,
+because the greedy packing fills chunks up to the cap.
+
+**Small tails:** 27 chunks are under 60 tokens (the last paragraph of a long article). They stay
+meaningful because of the contextual header, e.g. "AI Act Art. 16 – Obligations of providers of high-risk
+AI systems / (l) ensure … accessibility requirements". Ideas to *measure* in Phase 9 rather than guess now:
+(1) merge small tails into the previous chunk, (2) repeat a list's lead-in sentence ("Providers … shall:")
+in chunks that start mid-list, (3) a smaller cap (e.g. 200) versus 380.
