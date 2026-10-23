@@ -39,8 +39,10 @@ def main() -> None:
         register_vector(conn)
         with conn.cursor() as cur:
             cur.executemany(UPSERT, rows)
+        for view in ("chunk_terms", "chunk_len", "term_df", "lang_stats"):     # BM25 statistics
+            conn.execute(f"REFRESH MATERIALIZED VIEW {view}")
         conn.commit()
-        conn.execute("ANALYZE chunks")             # fresh statistics so the planner uses the HNSW index
+        conn.execute("ANALYZE")                    # fresh statistics so the planner uses the indexes
         total = conn.execute("SELECT count(*) FROM chunks").fetchone()[0]
     print(f"{total} rows in chunks")
 
