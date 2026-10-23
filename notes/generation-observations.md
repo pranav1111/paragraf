@@ -29,3 +29,15 @@ be made deterministically out of the prompt and into code.
   loads). Generation dominates. Options: streaming (perceived latency), smaller context, smaller model.
 - The reranker's top score could support abstention (Autobahn/Kindergeld retrieve only fine-related
   articles with low scores). Measure in Phase 9 before relying on it.
+
+## Found by Pranav: an incompleteness error (2026-10-23)
+"Muss mein Unternehmen einen Datenschutzbeauftragten benennen?" → retrieval perfect (GDPR Art. 37, 38, 39),
+but the answer gives only case (b) of Art. 37(1) (and drops "Kerntätigkeit", which changes the meaning).
+Cases (a) public authorities and (c) large-scale processing of Art. 9 / Art. 10 data were in source [1] but
+left out. The answer is *faithful* (nothing invented, citation valid), yet *incomplete*. The citation check
+cannot catch this; the Phase 9 correctness judge must compare against a reference answer.
+→ Add to the gold set with reference: "Yes, if (a) public authority/body (except courts acting in their
+judicial capacity), (b) core activities = large-scale regular and systematic monitoring, or
+(c) core activities = large-scale processing of special categories (Art. 9) or criminal data (Art. 10)."
+Corpus note: in Germany § 38 BDSG additionally requires a DPO when ≥ 20 persons regularly process personal
+data automatically; Paragraf cannot know this because the BDSG is not in the corpus (stretch goal).
