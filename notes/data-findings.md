@@ -30,6 +30,7 @@ pattern cannot find the bug; the cross-language comparison did.
 | NIS2 | 32022L2555 | 46 | 46 |
 
 ## Environment note (not about the data)
-The project folder lives in an iCloud-synced Desktop. iCloud set the macOS *hidden* flag on files in
-`.venv`, and Python ignores hidden `.pth` files, so `import paragraf` broke. The virtual environment now
-lives in `~/.venvs/paragraf` (outside iCloud) and `.venv` is a symlink to it.
+The project first lived in `~/Desktop/Work`, which is synced to iCloud Drive. iCloud set the macOS *hidden*
+flag on files in `.venv` (Python ignores hidden `.pth` files, so `import paragraf` broke), then overwrote a
+symlink workaround with its own cloud copy and created a `.venv 2` conflict copy. Fix: the code repos now
+live in `~/Developer` (not synced by iCloud). GitHub is the backup for code; iCloud is for documents.
