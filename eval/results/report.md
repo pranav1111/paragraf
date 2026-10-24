@@ -20,11 +20,11 @@ Label rates (Claude (assistant, NOT a human)): faithful 90%, correct 82%, comple
 | Metric | hybrid+rerank | hybrid+rerank_v2 | dense |
 |---|---|---|---|
 | answerable | 72 | 72 | 72 |
-| gold in sources | 99% | 99% | 99% |
+| gold in sources | 100% | 100% | 100% |
 | false abstention | 4% | 6% | 3% |
-| faithfulness | 96% | 95% | 96% |
-| correct (answered) | 72% | 62% | 77% |
-| correct (all answerable) | 69% | 58% | 75% |
+| faithfulness | 97% | 95% | 96% |
+| correct (answered) | 74% | 62% | 77% |
+| correct (all answerable) | 71% | 58% | 75% |
 | complete (answered) | 30% | 28% | 30% |
 | citation coverage | 88% | 86% | 88% |
 | invalid citations | 6 | 8 | 2 |
@@ -37,11 +37,11 @@ Label rates (Claude (assistant, NOT a human)): faithful 90%, correct 82%, comple
 | Metric | hybrid+rerank | hybrid+rerank_v2 | dense |
 |---|---|---|---|
 | answerable | 61 | 61 | 61 |
-| gold in sources | 98% | 98% | 98% |
+| gold in sources | 100% | 100% | 100% |
 | false abstention | 5% | 7% | 3% |
-| faithfulness | 96% | 94% | 97% |
-| correct (answered) | 76% | 58% | 78% |
-| correct (all answerable) | 72% | 54% | 75% |
+| faithfulness | 97% | 94% | 97% |
+| correct (answered) | 78% | 58% | 78% |
+| correct (all answerable) | 74% | 54% | 75% |
 | complete (answered) | 33% | 30% | 29% |
 | citation coverage | 87% | 86% | 88% |
 | invalid citations | 5 | 8 | 2 |
@@ -53,10 +53,9 @@ Label rates (Claude (assistant, NOT a human)): faithful 90%, correct 82%, comple
 
 | Bucket | Count | Questions |
 |---|---|---|
-| correct but incomplete | 29 | q003, q005, q006, q007, q008, q009, q013, q016, q018, q021, q022, q025, q027, q028, q029, q032, q040, q041, q042, q043, q046, q049, q055, q056, q065, q068, q069, q070, q071 |
-| incorrect | 19 | q001, q002, q010, q012, q024, q031, q034, q036, q037, q039, q044, q047, q050, q053, q062, q063, q066, q067, q072 |
+| correct but incomplete | 30 | q003, q005, q006, q007, q008, q009, q013, q016, q018, q021, q022, q025, q027, q028, q029, q032, q040, q041, q042, q043, q044, q046, q049, q055, q056, q065, q068, q069, q070, q071 |
 | citation coverage < 100% | 19 | q006, q013, q019, q022, q023, q025, q028, q036, q039, q040, q041, q047, q049, q054, q057, q061, q062, q066, q072 |
-| unfaithful claim(s) | 9 | q010, q034, q044, q047, q050, q053, q062, q066, q072 |
+| incorrect | 18 | q001, q002, q010, q012, q024, q031, q034, q036, q037, q039, q047, q050, q053, q062, q063, q066, q067, q072 |
+| unfaithful claim(s) | 8 | q010, q034, q047, q050, q053, q062, q066, q072 |
 | invalid citation | 4 | q005, q021, q024, q058 |
 | false abstention | 3 | q059, q060, q064 |
-| retrieval miss (gold article not among the 5 sources) | 1 | q044 |

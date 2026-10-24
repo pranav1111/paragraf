@@ -6,37 +6,37 @@ Gold set: 72 answerable questions; metrics at article level, language-free (find
 
 | Mode | n | Hit@1 | Recall@5 | Recall@10 | MRR | p50 latency |
 |---|---|---|---|---|---|---|
-| keyword | 72 | 0.56 | 0.80 | 0.87 | 0.66 | 4 ms |
-| dense | 72 | 0.92 | 0.97 | 0.97 | 0.94 | 23 ms |
-| hybrid | 72 | 0.75 | 0.96 | 0.98 | 0.83 | 28 ms |
-| hybrid+rerank | 72 | 0.88 | 0.96 | 0.97 | 0.93 | 1608 ms |
+| keyword | 72 | 0.56 | 0.81 | 0.88 | 0.66 | 4 ms |
+| dense | 72 | 0.92 | 0.97 | 0.98 | 0.95 | 21 ms |
+| hybrid | 72 | 0.75 | 0.97 | 0.99 | 0.84 | 26 ms |
+| hybrid+rerank | 72 | 0.88 | 0.97 | 0.98 | 0.94 | 1614 ms |
 
 ### Unseen during development (dev_seen = false)
 
 | Mode | n | Hit@1 | Recall@5 | Recall@10 | MRR | p50 latency |
 |---|---|---|---|---|---|---|
-| keyword | 61 | 0.56 | 0.80 | 0.88 | 0.67 | 5 ms |
-| dense | 61 | 0.92 | 0.96 | 0.97 | 0.94 | 22 ms |
-| hybrid | 61 | 0.75 | 0.95 | 0.98 | 0.83 | 28 ms |
-| hybrid+rerank | 61 | 0.87 | 0.95 | 0.97 | 0.93 | 1611 ms |
+| keyword | 61 | 0.56 | 0.80 | 0.89 | 0.67 | 4 ms |
+| dense | 61 | 0.92 | 0.97 | 0.98 | 0.95 | 21 ms |
+| hybrid | 61 | 0.75 | 0.96 | 0.98 | 0.84 | 26 ms |
+| hybrid+rerank | 61 | 0.87 | 0.96 | 0.98 | 0.93 | 1611 ms |
 
 ### Type: direct
 
 | Mode | n | Hit@1 | Recall@5 | Recall@10 | MRR | p50 latency |
 |---|---|---|---|---|---|---|
-| keyword | 48 | 0.60 | 0.90 | 0.96 | 0.73 | 5 ms |
-| dense | 48 | 0.96 | 1.00 | 1.00 | 0.97 | 26 ms |
-| hybrid | 48 | 0.83 | 1.00 | 1.00 | 0.89 | 28 ms |
-| hybrid+rerank | 48 | 0.90 | 1.00 | 1.00 | 0.95 | 1600 ms |
+| keyword | 48 | 0.60 | 0.90 | 0.96 | 0.73 | 4 ms |
+| dense | 48 | 0.96 | 1.00 | 1.00 | 0.97 | 24 ms |
+| hybrid | 48 | 0.83 | 1.00 | 1.00 | 0.89 | 27 ms |
+| hybrid+rerank | 48 | 0.90 | 1.00 | 1.00 | 0.95 | 1610 ms |
 
 ### Type: paraphrase
 
 | Mode | n | Hit@1 | Recall@5 | Recall@10 | MRR | p50 latency |
 |---|---|---|---|---|---|---|
-| keyword | 12 | 0.25 | 0.42 | 0.58 | 0.32 | 4 ms |
-| dense | 12 | 0.67 | 0.92 | 0.92 | 0.77 | 20 ms |
-| hybrid | 12 | 0.42 | 0.83 | 0.92 | 0.60 | 24 ms |
-| hybrid+rerank | 12 | 0.75 | 0.92 | 0.92 | 0.83 | 1642 ms |
+| keyword | 11 | 0.27 | 0.45 | 0.64 | 0.35 | 4 ms |
+| dense | 11 | 0.73 | 1.00 | 1.00 | 0.84 | 20 ms |
+| hybrid | 11 | 0.45 | 0.91 | 1.00 | 0.65 | 23 ms |
+| hybrid+rerank | 11 | 0.82 | 1.00 | 1.00 | 0.91 | 1666 ms |
 
 ### Type: exact_ref
 
@@ -44,17 +44,17 @@ Gold set: 72 answerable questions; metrics at article level, language-free (find
 |---|---|---|---|---|---|---|
 | keyword | 6 | 0.50 | 0.67 | 0.67 | 0.56 | 6 ms |
 | dense | 6 | 1.00 | 1.00 | 1.00 | 1.00 | 25 ms |
-| hybrid | 6 | 0.50 | 1.00 | 1.00 | 0.66 | 31 ms |
-| hybrid+rerank | 6 | 1.00 | 1.00 | 1.00 | 1.00 | 1484 ms |
+| hybrid | 6 | 0.50 | 1.00 | 1.00 | 0.66 | 30 ms |
+| hybrid+rerank | 6 | 1.00 | 1.00 | 1.00 | 1.00 | 1472 ms |
 
 ### Type: cross_law
 
 | Mode | n | Hit@1 | Recall@5 | Recall@10 | MRR | p50 latency |
 |---|---|---|---|---|---|---|
-| keyword | 6 | 0.83 | 0.92 | 0.92 | 0.89 | 6 ms |
-| dense | 6 | 1.00 | 0.75 | 0.83 | 1.00 | 24 ms |
-| hybrid | 6 | 1.00 | 0.83 | 0.92 | 1.00 | 30 ms |
-| hybrid+rerank | 6 | 0.83 | 0.67 | 0.83 | 0.92 | 1612 ms |
+| keyword | 7 | 0.71 | 0.86 | 0.86 | 0.80 | 6 ms |
+| dense | 7 | 0.86 | 0.71 | 0.79 | 0.93 | 21 ms |
+| hybrid | 7 | 0.86 | 0.79 | 0.86 | 0.93 | 27 ms |
+| hybrid+rerank | 7 | 0.71 | 0.64 | 0.79 | 0.86 | 1616 ms |
 
 ### German questions
 
@@ -62,5 +62,5 @@ Gold set: 72 answerable questions; metrics at article level, language-free (find
 |---|---|---|---|---|---|---|
 | keyword | 8 | 0.25 | 0.75 | 0.75 | 0.46 | 2 ms |
 | dense | 8 | 1.00 | 1.00 | 1.00 | 1.00 | 20 ms |
-| hybrid | 8 | 0.62 | 1.00 | 1.00 | 0.79 | 27 ms |
-| hybrid+rerank | 8 | 1.00 | 1.00 | 1.00 | 1.00 | 1703 ms |
+| hybrid | 8 | 0.62 | 1.00 | 1.00 | 0.79 | 24 ms |
+| hybrid+rerank | 8 | 1.00 | 1.00 | 1.00 | 1.00 | 1733 ms |

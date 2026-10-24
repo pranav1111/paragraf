@@ -20,8 +20,10 @@ Gold set: 80 questions reviewed by Pranav (72 answerable, 8 unanswerable; 13 mar
 - Unseen-only (61 questions) numbers are the same within 0.01 → no inflation from `dev_seen` questions.
 - **q044** ("Can a bank reject my loan using only an algorithm?", gold GDPR Art. 22) is missed by every mode.
   Retrieval returns AI Act Art. 14 / 6 / 26 (human oversight, high-risk credit scoring), which are *also*
-  relevant, so the gold label is arguably too narrow (a cross-law question in disguise). To decide with Pranav;
-  the gold set is not changed after seeing results without a documented reason.
+  relevant, so the gold label was too narrow (a cross-law question in disguise). **Changed on 2026-10-24 with
+  Pranav's approval** to cross-law (GDPR Art. 22 + AI Act Art. 14); the old label, reason and date are kept in
+  the question's `change_log`, and its Haiku verdicts were re-judged against the new reference. Effect on
+  retrieval: Recall@5 0.96 → 0.97 for every mode (one question).
 - **Article-level metrics hide chunk-level misses**: q002 (legal bases) counts as a retrieval hit because GDPR
   Art. 6 chunks were retrieved, but the chunk with the actual list (para 1) was not, so the answer lists none of
   the six bases.

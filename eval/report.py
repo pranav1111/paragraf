@@ -21,6 +21,11 @@ def pct(x: float) -> str:
     return "–" if math.isnan(x) else f"{100 * x:.0f}%"
 
 
+def gold_in_sources(g: dict, answer: dict) -> bool:
+    """Recomputed from the current gold (stored values can be stale after a documented gold change)."""
+    return bool(set(g["gold"]) & {s["article_key"] for s in answer["sources"]})
+
+
 def kappa(a: list[bool], b: list[bool]) -> float:
     """Cohen's kappa: agreement corrected for chance (1 = perfect, 0 = chance level)."""
     n = len(a)
@@ -41,7 +46,7 @@ def generation_rows(gold: dict, answers: dict, judged: dict, subset=None) -> dic
     totals = [answers[i]["ms_retrieve"] + answers[i]["ms_generate"] for i in ids]
     return {
         "answerable": len(answerable),
-        "gold in sources": mean(float(answers[i]["gold_in_sources"]) for i in answerable),
+        "gold in sources": mean(float(gold_in_sources(gold[i], answers[i])) for i in answerable),
         "false abstention": mean(float(answers[i]["abstained"]) for i in answerable),
         "faithfulness": mean(r.get("faithfulness") for r in j),
         "correct (answered)": mean(float(r["correct"]) for r in j),
@@ -115,10 +120,10 @@ def main() -> None:
         x = a[i]
         tags = []
         if g["gold"]:
-            if not x["gold_in_sources"]:
+            if not gold_in_sources(g, x):
                 tags.append("retrieval miss (gold article not among the 5 sources)")
             if x["abstained"]:
-                tags.append("false abstention" if x["gold_in_sources"] else "abstained (gold not retrieved)")
+                tags.append("false abstention" if gold_in_sources(g, x) else "abstained (gold not retrieved)")
             r = jr.get(i, {})
             if "correct" in r:
                 if not r["correct"]:
