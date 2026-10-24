@@ -1,0 +1,27 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: the workflow can read the repository and nothing else.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install (CPU-only PyTorch on Linux, see pyproject.toml)
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Unit tests (no database, models or LLM needed)
+        run: uv run pytest -m "not integration" -q

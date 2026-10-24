@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
     device: str = "mps"                      # "cpu" inside Docker
     llm_base_url: str = "http://localhost:11434/v1"
-    llm_model: str = "qwen2.5:7b"
+    llm_model: str = "qwen2.5:14b"           # chosen in Phase 9 (0 invented citations); qwen2.5:7b is ~2x faster
     llm_api_key: str = "ollama"              # Ollama ignores it; hosted APIs need a real key
     anthropic_api_key: str = ""              # only for the optional hosted judge in eval/ (set it in .env)
     prompt_version: str = "v1"               # generation prompt (see generate.py); v2 = completeness/citation fix

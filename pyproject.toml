@@ -17,6 +17,7 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.16.1",
     "sentence-transformers>=6.1.0",
+    "torch>=2.14.1",
     "uvicorn[standard]>=0.54.0",
 ]
 
@@ -37,3 +38,13 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 110
+
+# Linux (Docker, CI): CPU-only PyTorch wheels, several GB smaller than the default CUDA build.
+# macOS keeps the normal wheels (Apple GPU / mps).
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

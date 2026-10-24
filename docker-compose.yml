@@ -15,5 +15,30 @@ services:
       interval: 5s
       retries: 10
 
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PARAGRAF_DATABASE_URL: postgresql://paragraf:paragraf@db:5432/paragraf
+      PARAGRAF_LLM_BASE_URL: http://host.docker.internal:11434/v1   # Ollama keeps running on the host
+      PARAGRAF_LLM_MODEL: ${PARAGRAF_LLM_MODEL:-qwen2.5:14b}
+      PARAGRAF_DEVICE: cpu
+      HF_HOME: /hf                                                  # reuse the host's model cache
+      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ${HF_CACHE:-${HOME}/.cache/huggingface}:/hf
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      start_period: 180s                                            # models load on startup
+      retries: 6
+
 volumes:
   pgdata:

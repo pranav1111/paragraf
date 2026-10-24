@@ -1,5 +1,153 @@
 # Paragraf
 
-A cited, evaluated RAG assistant for EU digital law (GDPR, EU AI Act, NIS2), in German and English.
+**Cited answers about EU digital law (GDPR, EU AI Act, NIS2), in German and English, with an evaluation that
+shows how well it actually works.**
 
-Project 1 of 5 in my portfolio track. Work in progress; see the issues for the build plan.
+> **Q:** Wann muss eine Datenpanne gemeldet werden?
+> **A:** Im Falle einer Verletzung des Schutzes personenbezogener Daten meldet der Verantwortliche unverzüglich und
+> möglichst innerhalb von 72 Stunden nach Kenntnisnahme der Verletzung diese der Aufsichtsbehörde, es sei denn,
+> dass die Verletzung voraussichtlich kein Risiko für die Rechte und Freiheiten natürlicher Personen darstellt. [1]
+> **[1]** DSGVO Art. 33 – Meldung von Verletzungen des Schutzes personenbezogener Daten an die Aufsichtsbehörde
+
+Runs fully locally: PostgreSQL + pgvector for search, a local LLM through Ollama for answers. No question ever
+leaves the machine, and the request log never contains question text. Not legal advice.
+
+## Results
+
+Evaluated on a gold set of **80 questions** (reviewed by hand against the law text: direct, paraphrased, exact
+article references, cross-law, German, and 8 unanswerable "trap" questions). Full analysis:
+[`notes/evaluation-findings.md`](notes/evaluation-findings.md), raw data in [`eval/results/`](eval/results).
+
+**Retrieval** (72 answerable questions, right article found):
+
+| Mode | Hit@1 | Recall@5 | MRR | Latency (p50) |
+|---|---|---|---|---|
+| Keyword (BM25 in PostgreSQL) | 0.56 | 0.81 | 0.66 | 4 ms |
+| Dense (bge-m3 + pgvector HNSW) | **0.92** | **0.97** | **0.95** | 21 ms |
+| Hybrid (Reciprocal Rank Fusion) | 0.75 | 0.97 | 0.84 | 26 ms |
+| Hybrid + cross-encoder rerank (default) | 0.88 | 0.97 | 0.94 | 1.6 s |
+
+**Answers** (judged by Claude Haiku 4.5; the judge was validated against reference labels first):
+
+| | qwen2.5:7b | **qwen2.5:14b (default)** |
+|---|---|---|
+| Faithful (claims supported by the cited law) | 97% | 95% |
+| Correct | 71% | **76%** |
+| Complete (all main points) | 30% | 33% |
+| Invented citation numbers | 6 | **0** |
+| Unanswerable questions refused | 8/8 | 8/8 |
+| Latency (p50, Apple M-series) | 7.9 s | 14.3 s |
+
+### Key findings
+- **PostgreSQL's `ts_rank_cd` is not BM25.** It has no IDF, so "Article 50" lost to chunks that repeat "article"
+  and "AI". Real BM25 in SQL lifted keyword top-1 from 0/11 to 2/11 on an early test set and doubled hybrid quality.
+- **Dense retrieval alone matched the full pipeline** at 1/70 of the latency. The reranker helps only on
+  paraphrased questions; keyword search helps on cross-law questions.
+- **Validate the judge.** A local 7B judge agreed with the reference labels 82% of the time, but its Cohen's
+  κ was **0.00** (no better than chance). Claude Haiku reached κ 0.43–0.60 and is used for all numbers.
+- **Prompting cannot add capability.** A stricter prompt made the 7B model *worse* (correct 69% → 58%); a 14B
+  model removed invented citations (6 → 0) at 1.8× latency. Both experiments are kept, including the negative one.
+- **Biggest open weakness: completeness.** Answers are faithful but often stop after the first case or tier.
+
+## How it works
+
+```
+EUR-Lex (official Cellar API, XHTML)  →  parse per article  →  structure-aware chunks (aligned DE/EN)
+        →  bge-m3 embeddings + PostgreSQL full-text  →  one table, two indexes (HNSW + GIN/BM25)
+
+question → BM25 + dense search → Reciprocal Rank Fusion → cross-encoder rerank → top 5 sources
+         → local LLM (Ollama) with numbered sources → answer with [n] citations → citation check
+```
+
+- **Hybrid search in one database:** pgvector (HNSW, cosine) for meaning; BM25 computed in SQL from PostgreSQL's
+  stemmed `tsvector`s (materialised term statistics) for exact references such as "Art. 17".
+- **Bilingual by design:** EN and DE versions share article and paragraph structure, so chunks are split at the
+  same points in both languages and duplicates across languages are removed exactly.
+- **Grounded generation:** numbered sources, mandatory citations, an exact "not found" sentence per language
+  (chosen in code, not by the model), and a check that flags invented citation numbers.
+- **Provider-agnostic LLM layer:** OpenAI-compatible API, so switching to another local or hosted model is a
+  configuration change.
+
+## Quickstart
+
+Requirements: [Docker](https://docs.docker.com/) (or Colima), [Ollama](https://ollama.com),
+[uv](https://docs.astral.sh/uv/), ~25 GB free disk, 16 GB+ RAM for the default 14B model.
+
+### Option A: on macOS with the Apple GPU (fastest)
+
+```bash
+git clone https://github.com/pranav1111/paragraf.git && cd paragraf
+ollama pull qwen2.5:14b                 # or qwen2.5:7b on smaller machines (set PARAGRAF_LLM_MODEL)
+docker compose up -d db                 # PostgreSQL 17 + pgvector, schema applied automatically
+uv sync
+uv run sh scripts/build_index.sh        # download → parse → chunk → embed (first run downloads ~4.5 GB of models)
+uv run uvicorn paragraf.api:app --port 8000
+```
+
+Open http://localhost:8000 (web UI) or http://localhost:8000/docs (API).
+
+### Option B: everything except the LLM in Docker (CPU)
+
+```bash
+ollama pull qwen2.5:14b                 # Ollama runs on the host
+docker compose up -d db
+docker compose run --rm api sh scripts/build_index.sh
+docker compose up -d api                # → http://localhost:8000
+```
+
+Measured on Colima (4 vCPU): search takes **~20 s per question on CPU** (the cross-encoder reranker), against
+~2 s with the Apple GPU in Option A; the image is ~3 GB. Use Option A for demos. If something answers on port 8000
+although the container is not running, check for a leftover local server (`lsof -i :8000`): Colima does not
+report a port conflict, Docker Desktop does.
+
+### Command line
+
+```bash
+uv run python -m paragraf.ask "Which AI practices are prohibited?"
+uv run python -m paragraf.search "Art. 17 right to be forgotten"     # compare the four retrieval modes
+```
+
+## Configuration
+
+Every setting can be overridden with an environment variable or a `.env` file (see `.env.example`):
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `PARAGRAF_LLM_MODEL` | `qwen2.5:14b` | Generator model (`qwen2.5:7b` is about 2× faster) |
+| `PARAGRAF_LLM_BASE_URL` | `http://localhost:11434/v1` | Any OpenAI-compatible endpoint |
+| `PARAGRAF_DATABASE_URL` | `postgresql://paragraf:paragraf@localhost:5432/paragraf` | PostgreSQL with pgvector |
+| `PARAGRAF_DEVICE` | `mps` | `mps` (Apple GPU), `cuda` or `cpu` for embeddings and reranking |
+| `PARAGRAF_CANDIDATES` / `PARAGRAF_TOP_K` | `30` / `5` | Candidates before reranking / sources sent to the LLM |
+| `PARAGRAF_PROMPT_VERSION` | `v1` | `v2` is the documented (worse) experiment |
+
+## Evaluation
+
+```bash
+uv run python eval/run_retrieval.py                 # 4 retrieval modes, no LLM needed
+uv run python eval/run_answers.py hybrid+rerank     # answers for all 80 questions
+uv run python eval/judge.py local hybrid+rerank     # free local judge (or: haiku, needs PARAGRAF_ANTHROPIC_API_KEY)
+uv run python eval/report.py                        # → eval/results/report.md
+```
+
+The gold set (`eval/gold.jsonl`) was drafted from the law text and reviewed question by question; 13 questions
+that overlap with development tests are marked `dev_seen` and reported separately. Reference labels for judge
+validation are in `eval/assistant_labels.jsonl` (labelled by Claude, not by a human; stated in the report).
+
+## Project structure
+
+```
+src/paragraf/   download · ingest · chunk · index · retrieve · generate · api · ask · search · config
+sql/            schema: chunks table, HNSW + GIN indexes, BM25 statistics (materialised views)
+eval/           gold set, retrieval/answer runners, judge, labelling tools, report
+notes/          data, retrieval, generation and evaluation findings
+tests/          unit tests (CI) and integration tests (need PostgreSQL / Ollama)
+```
+
+## Limitations
+- Answers are often **incomplete** (they stop after the first case, tier or deadline); read the cited article.
+- Only the GDPR, AI Act and NIS2 (EU level). German national law such as the BDSG is not included.
+- Evaluated on 80 questions: differences of a few points are not statistically significant (tests in the notes).
+- Not legal advice.
+
+## Data and licence
+EU legislation from EUR-Lex / the Publications Office of the EU, reused under Commission Decision 2011/833/EU.
