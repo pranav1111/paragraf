@@ -88,6 +88,9 @@ Open http://localhost:8000 (web UI) or http://localhost:8000/docs (API).
 
 ### Option B: everything except the LLM in Docker (CPU)
 
+> With **Colima**, clone the repository somewhere inside your home folder: Colima only shares `$HOME` with its VM,
+> and a project elsewhere (e.g. `/tmp`) silently mounts empty folders, so the database starts without its schema.
+
 ```bash
 ollama pull qwen2.5:14b                 # Ollama runs on the host
 docker compose up -d db
@@ -95,10 +98,10 @@ docker compose run --rm api sh scripts/build_index.sh
 docker compose up -d api                # → http://localhost:8000
 ```
 
-Measured on Colima (4 vCPU): search takes **~20 s per question on CPU** (the cross-encoder reranker), against
-~2 s with the Apple GPU in Option A; the image is ~3 GB. Use Option A for demos. If something answers on port 8000
-although the container is not running, check for a leftover local server (`lsof -i :8000`): Colima does not
-report a port conflict, Docker Desktop does.
+Measured on Colima (4 vCPU): building the index takes ~8 minutes on CPU (44 s on the Apple GPU), search
+~20 s per question (the cross-encoder reranker) against ~2 s in Option A, and a fresh clone reaches its first
+answer in ~10 minutes once the models are downloaded. Use Option A for demos. Troubleshooting in
+[`notes/deployment-notes.md`](notes/deployment-notes.md).
 
 ### Command line
 
