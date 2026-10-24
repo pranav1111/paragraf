@@ -94,3 +94,35 @@ to Art. 34). Answers grow by 25% without becoming more complete.
 **Lesson:** prompt rules cannot add capability a small model lacks. Next candidates: a larger/newer generator
 (a configuration change thanks to the OpenAI-compatible client), and *small-to-big* retrieval (add the rest of
 an article when one of its chunks is retrieved) for chunk-level misses like q002.
+
+## 6. Fix 2: a larger generator (qwen2.5:14b), same prompt v1, same retrieval
+
+| Metric (Haiku judge, all 80) | 7b (v1) | 14b (v1) |
+|---|---|---|
+| correct (of all answerable) | 71% | **76%** |
+| complete | 30% | 33% |
+| faithfulness | 97% | 95% |
+| citation coverage | 88% | **96%** |
+| invalid citation numbers | 6 | **0** |
+| unanswerable refused | 8/8 | 8/8 |
+| p50 / p95 latency | 7.9 s / 11.4 s | **14.3 s / 20.4 s** |
+
+(7b baseline 71% instead of 69% because of the documented q044 change.)
+- Correctness: 13 questions improved, 9 got worse (exact McNemar p = 0.52), so **the +5 points are not
+  statistically significant** at n = 72.
+- **Clear wins:** invented citation numbers 6 → 0 and citation coverage 88% → 96%; fluent German instead of
+  garbled sentences (q066); the direct-marketing objection is now stated correctly as absolute (q010); the
+  prohibited-practice fine is now the correct EUR 35m / 7% (q031). Its second tier, however, is still taken
+  from Art. 100 (Union institutions), a scope error that remains.
+- Completeness barely moves (30% → 33%): the model still stops after the first case or tier. Remaining levers:
+  small-to-big retrieval (whole article in context) and, if quality matters more than privacy and cost, a hosted
+  generator.
+- **Cost:** about 1.8× latency (and 9 GB of memory instead of 4.7 GB).
+
+## 7. Summary for the README
+- Retrieval: dense bge-m3 search alone reaches Hit@1 0.92 / Recall@5 0.97 at 21 ms; a cross-encoder adds
+  1.6 s without a measurable gain overall (it helps on paraphrases and keyword search helps on cross-law questions).
+- Answers: faithful (95–97%) but often incomplete (~30%). Prompt rules made a 7B model worse (negative result);
+  a 14B model removed invented citations and fixed the clearest scope and language errors at 1.8× latency.
+- Judges must be validated: a local 7B judge looked fine on % agreement but had kappa 0.00; Claude Haiku had
+  kappa 0.43 (correctness) and 0.60 (completeness) against reference labels (by Claude; human labels pending).
