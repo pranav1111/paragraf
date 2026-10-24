@@ -68,7 +68,7 @@ def make_judge(name: str):
         model = "claude-haiku-4-5-20251001"
 
         def call(prompt: str) -> str:
-            r = client.messages.create(model=model, max_tokens=2000, temperature=0,
+            r = client.messages.create(model=model, max_tokens=2000,
                                        messages=[{"role": "user", "content": prompt}])
             return "".join(block.text for block in r.content if block.type == "text")
         return call, model
