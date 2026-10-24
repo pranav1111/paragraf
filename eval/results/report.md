@@ -17,37 +17,37 @@ Label rates (Claude (assistant, NOT a human)): faithful 90%, correct 82%, comple
 
 ## Answer quality: All 80 questions
 
-| Metric | hybrid+rerank | dense |
-|---|---|---|
-| answerable | 72 | 72 |
-| gold in sources | 99% | 99% |
-| false abstention | 4% | 3% |
-| faithfulness | 96% | 96% |
-| correct (answered) | 72% | 77% |
-| correct (all answerable) | 69% | 75% |
-| complete (answered) | 30% | 30% |
-| citation coverage | 88% | 88% |
-| invalid citations | 6 | 2 |
-| correct abstention (unanswerable) | 100% | 75% |
-| p50 latency | 7868 ms | 5680 ms |
-| p95 latency | 11373 ms | 9017 ms |
+| Metric | hybrid+rerank | hybrid+rerank_v2 | dense |
+|---|---|---|---|
+| answerable | 72 | 72 | 72 |
+| gold in sources | 99% | 99% | 99% |
+| false abstention | 4% | 6% | 3% |
+| faithfulness | 96% | 95% | 96% |
+| correct (answered) | 72% | 62% | 77% |
+| correct (all answerable) | 69% | 58% | 75% |
+| complete (answered) | 30% | 28% | 30% |
+| citation coverage | 88% | 86% | 88% |
+| invalid citations | 6 | 8 | 2 |
+| correct abstention (unanswerable) | 100% | 100% | 75% |
+| p50 latency | 7868 ms | 8168 ms | 5680 ms |
+| p95 latency | 11373 ms | 12941 ms | 9017 ms |
 
 ## Answer quality: Unseen during development (67)
 
-| Metric | hybrid+rerank | dense |
-|---|---|---|
-| answerable | 61 | 61 |
-| gold in sources | 98% | 98% |
-| false abstention | 5% | 3% |
-| faithfulness | 96% | 97% |
-| correct (answered) | 76% | 78% |
-| correct (all answerable) | 72% | 75% |
-| complete (answered) | 33% | 29% |
-| citation coverage | 87% | 88% |
-| invalid citations | 5 | 2 |
-| correct abstention (unanswerable) | 100% | 67% |
-| p50 latency | 7575 ms | 5694 ms |
-| p95 latency | 11526 ms | 9169 ms |
+| Metric | hybrid+rerank | hybrid+rerank_v2 | dense |
+|---|---|---|---|
+| answerable | 61 | 61 | 61 |
+| gold in sources | 98% | 98% | 98% |
+| false abstention | 5% | 7% | 3% |
+| faithfulness | 96% | 94% | 97% |
+| correct (answered) | 76% | 58% | 78% |
+| correct (all answerable) | 72% | 54% | 75% |
+| complete (answered) | 33% | 30% | 29% |
+| citation coverage | 87% | 86% | 88% |
+| invalid citations | 5 | 8 | 2 |
+| correct abstention (unanswerable) | 100% | 100% | 67% |
+| p50 latency | 7575 ms | 7881 ms | 5694 ms |
+| p95 latency | 11526 ms | 13096 ms | 9169 ms |
 
 ## Failure buckets (hybrid+rerank)
 

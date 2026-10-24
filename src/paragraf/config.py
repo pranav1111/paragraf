@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     llm_model: str = "qwen2.5:7b"
     llm_api_key: str = "ollama"              # Ollama ignores it; hosted APIs need a real key
     anthropic_api_key: str = ""              # only for the optional hosted judge in eval/ (set it in .env)
+    prompt_version: str = "v1"               # generation prompt (see generate.py); v2 = completeness/citation fix
     candidates: int = 30                     # size of the hybrid candidate list
     top_k: int = 5                           # sources sent to the LLM after reranking
 

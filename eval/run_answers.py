@@ -1,6 +1,7 @@
 """Generate Paragraf's answers for every gold question (input for the judges and for human labels).
 
     uv run python eval/run_answers.py hybrid+rerank      → eval/results/answers_hybrid+rerank.jsonl
+    PARAGRAF_PROMPT_VERSION=v2 uv run python eval/run_answers.py hybrid+rerank v2   → answers_hybrid+rerank_v2.jsonl
 """
 import json
 import sys
@@ -20,7 +21,8 @@ def main() -> None:
     mode = sys.argv[1] if len(sys.argv) > 1 else "hybrid+rerank"
     gold = [json.loads(line) for line in GOLD.open(encoding="utf-8")]
     retriever = Retriever()
-    out = OUT / f"answers_{mode}.jsonl"
+    tag = f"_{sys.argv[2]}" if len(sys.argv) > 2 else ""
+    out = OUT / f"answers_{mode}{tag}.jsonl"
     with out.open("w", encoding="utf-8") as f:
         for i, g in enumerate(gold, start=1):
             t0 = time.perf_counter()

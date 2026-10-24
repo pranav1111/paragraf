@@ -10,7 +10,7 @@ from metrics import citation_coverage, mean, percentile
 GOLD, OUT = Path("eval/gold.jsonl"), Path("eval/results")
 LABEL_SOURCES = [("human (Pranav, blind)", Path("eval/human_labels.jsonl")),
                  ("Claude (assistant, NOT a human)", Path("eval/assistant_labels.jsonl"))]
-MODES, JUDGES = ("hybrid+rerank", "dense"), ("local", "haiku")
+MODES, JUDGES = ("hybrid+rerank", "hybrid+rerank_v2", "dense"), ("local", "haiku")
 
 
 def load(path: Path) -> dict:
