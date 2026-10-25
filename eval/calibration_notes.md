@@ -3,7 +3,14 @@
 Round 1 (20 answers, `human_labels_calibration.jsonl`) was graded yes/yes/yes for every answer. A second
 look found real problems in about half of them. This happens to almost everyone in a first round: fluent
 answers *read* as correct. Round 1 is therefore used as a **calibration set**. Its labels are kept, but
-they are not used to validate the judges. Round 2 grades 20 *different* answers, blind.
+they are not used to validate the judges.
+
+**Current human round** (`eval/label.py`, structured and blind): 40 answers, never including the worked examples
+below. 20 of them were also labelled by Claude (`assistant_labels.jsonl`), so the two label sets can be compared.
+20 were never labelled before. Each answer is checked in four steps instead of four yes/no questions: count the
+points of the reference and how many the answer states correctly; say whether anything is wrong; say whether any
+claim is missing from the sources; name the citation numbers that point to the wrong source (numbers that do not
+exist are flagged automatically). The step answers are stored with the labels, so every label can be explained.
 
 ## The four questions
 

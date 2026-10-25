@@ -95,6 +95,15 @@ def main() -> None:
         md += ["", (f"Label rates ({source}): faithful {pct(rates['faithful'])}, correct {pct(rates['correct'])}, "
                f"complete {pct(rates['complete'])}, **citations right {pct(rates['citations_right'])}** "
                "(judges do not measure citation accuracy)."), ""]
+    human, claude = (load(path) for _, path in LABEL_SOURCES)
+    both = [i for i in human if i in claude]
+    if both:
+        md += ["## Human vs. Claude labels", "", f"{len(both)} answers labelled by both, independently.", "",
+               "| Question | Agreement | κ |", "|---|---|---|"]
+        for k in ("faithful", "correct", "complete", "citations_right"):
+            h, c = [human[i][k] for i in both], [claude[i][k] for i in both]
+            md.append(f"| {k} | {pct(mean(float(x == y) for x, y in zip(h, c)))} | {kappa(h, c):.2f} |")
+        md.append("")
     if trusted_by:
         md += [f"**Numbers below use the `{trusted}` judge** (best agreement with labels by {trusted_by}).", ""]
 
