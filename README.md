@@ -174,6 +174,9 @@ tests/          unit tests (CI) and integration tests (need PostgreSQL / Ollama)
   Next: *small-to-big* retrieval (add the rest of an article when one of its chunks is retrieved).
 - Only the GDPR, AI Act and NIS2 (EU level), without recitals. Next: recitals and German national law (BDSG).
 - Evaluated on 80 questions: differences of a few points are not statistically significant (tests in the notes).
+- Answers **vary between runs** (temperature 0.1): with identical sources, "Wann muss eine Datenpanne gemeldet
+  werden?" cited GDPR Art. 33 in three runs and NIS2 Art. 23 (a 72-hour rule for cyber incidents) in the next
+  three. The evaluation is a single run per question. Next: repeat runs to measure the variance, or temperature 0.
 - The judge was validated against labels written by Claude, not by a human. Next: human labels on the same 40 answers.
 - Search takes ~20 s on CPU (the reranker). Next: a smaller reranker, or dense mode on machines without a GPU.
 - Not legal advice.
