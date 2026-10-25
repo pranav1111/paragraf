@@ -3,11 +3,7 @@
 **Cited answers about EU digital law (GDPR, EU AI Act, NIS2), in German and English, with an evaluation that
 shows how well it actually works.**
 
-> **Q:** Wann muss eine Datenpanne gemeldet werden?
-> **A:** Im Falle einer Verletzung des Schutzes personenbezogener Daten meldet der Verantwortliche unverzüglich und
-> möglichst innerhalb von 72 Stunden nach Kenntnisnahme der Verletzung diese der Aufsichtsbehörde, es sei denn,
-> dass die Verletzung voraussichtlich kein Risiko für die Rechte und Freiheiten natürlicher Personen darstellt. [1]
-> **[1]** DSGVO Art. 33 – Meldung von Verletzungen des Schutzes personenbezogener Daten an die Aufsichtsbehörde
+![A German question about data breaches answered with a citation to GDPR Art. 33 (real time, Apple M-series)](docs/demo.gif)
 
 Runs fully locally: PostgreSQL + pgvector for search, a local LLM through Ollama for answers. No question ever
 leaves the machine, and the request log never contains question text. Not legal advice.
@@ -51,12 +47,25 @@ article references, cross-law, German, and 8 unanswerable "trap" questions). Ful
 
 ## How it works
 
-```
-EUR-Lex (official Cellar API, XHTML)  →  parse per article  →  structure-aware chunks (aligned DE/EN)
-        →  bge-m3 embeddings + PostgreSQL full-text  →  one table, two indexes (HNSW + GIN/BM25)
-
-question → BM25 + dense search → Reciprocal Rank Fusion → cross-encoder rerank → top 5 sources
-         → local LLM (Ollama) with numbered sources → answer with [n] citations → citation check
+```mermaid
+flowchart TB
+    subgraph index["Indexing: once, about a minute on an Apple GPU"]
+        direction LR
+        A["EUR-Lex via the Cellar API<br/>GDPR, AI Act, NIS2 in EN + DE"] --> B["Parse per article"]
+        B --> C["Structure-aware chunks<br/>1,058 aligned DE/EN chunks"]
+        C --> D[("PostgreSQL 17<br/>pgvector HNSW + BM25 statistics")]
+    end
+    subgraph ask["Per question: ~2 s search, ~3 to 20 s answer"]
+        direction LR
+        Q["Question<br/>(DE or EN)"] --> K["BM25<br/>in SQL"]
+        Q --> V["Dense search<br/>bge-m3"]
+        K --> F["Reciprocal<br/>Rank Fusion"]
+        V --> F
+        F --> R["Cross-encoder rerank<br/>top 5 sources"]
+        R --> G["Local LLM (Ollama)<br/>qwen2.5:14b"]
+        G --> O["Answer with numbered<br/>citations, checked"]
+    end
+    index -. "search reads the index" .-> ask
 ```
 
 - **Hybrid search in one database:** pgvector (HNSW, cosine) for meaning; BM25 computed in SQL from PostgreSQL's
@@ -67,6 +76,20 @@ question → BM25 + dense search → Reciprocal Rank Fusion → cross-encoder re
   (chosen in code, not by the model), and a check that flags invented citation numbers.
 - **Provider-agnostic LLM layer:** OpenAI-compatible API, so switching to another local or hosted model is a
   configuration change.
+
+## Design decisions and trade-offs
+
+| Decision | Why | Trade-off |
+|---|---|---|
+| **PostgreSQL + pgvector** instead of a dedicated vector database | One system for text, vectors, metadata and BM25; transactions, joins and backups come for free | Fine for thousands of chunks; millions would need partitioning or a dedicated engine |
+| **BM25 written in SQL** instead of `ts_rank_cd` | `ts_rank_cd` has no IDF, so common words outranked exact article numbers | Term statistics live in materialised views that must be refreshed after indexing |
+| **Hybrid + rerank as default**, although dense search alone scored as well overall | Refused 8/8 unanswerable questions (dense: 6/8) and ranked paraphrased questions better (Hit@1 0.82 vs 0.73) | +1.6 s per question and weaker on cross-law questions (Recall@5 0.64 vs 0.71); dense mode stays available (`mode: "dense"`) |
+| **Structure-aware chunks** (article → paragraph groups, max 380 tokens, contextual header) | Citations stay at article level; EN and DE chunks align one to one, so duplicates across languages are removed exactly | Long articles are split, which causes chunk-level misses (see Limitations) |
+| **Local LLM** (qwen2.5:14b through Ollama) | Questions never leave the machine (GDPR-friendly), no cost per request, reproducible results | Quality is limited by model size: 76% correct, 33% complete (hosted models were not tested) |
+| **14B instead of 7B model** | Removed invented citation numbers (6 → 0) and fixed broken German | 1.8× latency, ~9 GB of memory |
+| **Abstention sentence chosen in code** (language detection) | The 7B model answered German questions with the English refusal | Only DE and EN are supported |
+| **Official Cellar API** instead of scraping EUR-Lex | EUR-Lex shows bot checks to scripts; the Publications Office provides the API for automated reuse | Depends on one public service being available |
+| **Metadata-only request log** | Users may type personal data into questions; data minimisation (GDPR Art. 5(1)(c)) | Debugging relies on the eval set instead of production questions |
 
 ## Quickstart
 
@@ -146,10 +169,13 @@ notes/          data, retrieval, generation and evaluation findings
 tests/          unit tests (CI) and integration tests (need PostgreSQL / Ollama)
 ```
 
-## Limitations
+## Limitations and next steps
 - Answers are often **incomplete** (they stop after the first case, tier or deadline); read the cited article.
-- Only the GDPR, AI Act and NIS2 (EU level). German national law such as the BDSG is not included.
+  Next: *small-to-big* retrieval (add the rest of an article when one of its chunks is retrieved).
+- Only the GDPR, AI Act and NIS2 (EU level), without recitals. Next: recitals and German national law (BDSG).
 - Evaluated on 80 questions: differences of a few points are not statistically significant (tests in the notes).
+- The judge was validated against labels written by Claude, not by a human. Next: human labels on the same 40 answers.
+- Search takes ~20 s on CPU (the reranker). Next: a smaller reranker, or dense mode on machines without a GPU.
 - Not legal advice.
 
 ## Data and licence

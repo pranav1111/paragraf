@@ -14,9 +14,11 @@ Gold set: 80 questions reviewed by Pranav (72 answerable, 8 unanswerable; 13 mar
 
 - Dense alone matches the full pipeline at **1/70 of the latency**. The dense vs. rerank difference at Hit@1
   (66 vs 63 of 72) is **not statistically meaningful** at this sample size.
-- By type: the reranker helps on **paraphrased** questions (Hit@1 0.75 vs dense 0.67); **keyword** search
-  helps on **cross-law** questions (both articles in the top 5: 0.92 vs dense 0.75). German questions: dense and
-  rerank 1.00.
+- By type (after the q044 change): the reranker helps on **paraphrased** questions (Hit@1 0.82 vs dense 0.73,
+  n = 11). On **cross-law** questions (n = 7), keyword search finds both articles most often (Recall@5 0.86 vs
+  dense 0.71) and the reranker is the *weakest* mode (0.64): it scores each chunk against the question on its
+  own, so chunks from the law that matches best crowd out the second law. German questions: dense and rerank 1.00.
+  (Earlier per-type numbers in this note were computed before q044 moved from paraphrase to cross-law.)
 - Unseen-only (61 questions) numbers are the same within 0.01 → no inflation from `dev_seen` questions.
 - **q044** ("Can a bank reject my loan using only an algorithm?", gold GDPR Art. 22) is missed by every mode.
   Retrieval returns AI Act Art. 14 / 6 / 26 (human oversight, high-risk credit scoring), which are *also*
