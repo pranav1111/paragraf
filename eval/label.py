@@ -1,4 +1,4 @@
-"""Grade 20 answers yourself, BEFORE looking at any judge output (blind labels).
+"""Grade the 40 reference answers yourself, BEFORE looking at any judge output or other labels (blind).
 
     uv run python eval/label.py
 
@@ -7,6 +7,8 @@ For each answer you see the question, the reference answer, the sources Paragraf
 Four yes/no questions: faithful (everything supported by the sources)? correct? complete?
 citations right (each [n] points to a source that contains the claim)?
 Progress is saved after every answer (eval/human_labels.jsonl); run again to continue.
+You label the same 40 answers as eval/assistant_labels.jsonl (Claude), so your labels can replace them as the
+reference and the two label sets can be compared. Claude's labels are never shown.
 """
 import json
 import random
@@ -16,12 +18,18 @@ from pathlib import Path
 GOLD, ANSWERS = Path("eval/gold.jsonl"), Path("eval/results/answers_hybrid+rerank.jsonl")
 LABELS = Path("eval/human_labels.jsonl")
 CALIBRATION = Path("eval/human_labels_calibration.jsonl")   # round 1: seen, not blind any more
-N, SEED = 20, 29
+REFERENCE = Path("eval/assistant_labels.jsonl")             # round 2: the 40 answers labelled by Claude
+N, SEED = 40, 29
 BOLD, DIM, RESET = "\033[1m", "\033[2m", "\033[0m"
 
 
 def sample(gold: dict, answers: list[dict]) -> list[dict]:
-    """Stratified by question type so every type is represented; fixed seed = reproducible."""
+    """The answers Claude labelled (same set, new order); otherwise a stratified sample with a fixed seed."""
+    if REFERENCE.exists():
+        ids = {json.loads(line)["id"] for line in REFERENCE.open(encoding="utf-8")}
+        picked = [a for a in answers if a["id"] in ids]
+        random.Random(SEED).shuffle(picked)
+        return picked
     seen = {json.loads(line)["id"] for line in CALIBRATION.open(encoding="utf-8")} if CALIBRATION.exists() else set()
     pool = [a for a in answers if gold[a["id"]]["gold"] and not a["abstained"] and a["id"] not in seen]
     rng = random.Random(SEED)
