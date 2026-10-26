@@ -90,3 +90,14 @@ slots) and **several chunks of the same article** crowding the top results.
 **Planner gotcha:** right after the bulk upsert, `EXPLAIN` showed a full `Sort` instead of the HNSW index,
 because table statistics were stale (estimated 2,110 rows after the re-run). After `ANALYZE chunks`, the
 plan uses `Index Scan using chunks_embedding_idx`. The indexer now runs `ANALYZE` after loading.
+
+# Download integrity (2026-10-26, finding F1 in Warden's threat model)
+
+The Publications Office answers `https://…/resource/celex/<id>` with a **303 redirect to plain `http://`**, and the
+old downloader followed it: the law texts travelled unencrypted and were never checked, so anyone on the network
+could have altered them before they reached the database (an indirect prompt-injection path). Fix: redirects are
+followed by hand and upgraded back to https (other hosts are refused), and every file must match its SHA-256 in
+`data/sources.sha256` before it is written. The six files fetched over https were byte-identical to the earlier
+plain-http downloads, so the existing index was not affected. A new official version has to be reviewed and
+recorded with `python -m paragraf.download --update-manifest`.
+

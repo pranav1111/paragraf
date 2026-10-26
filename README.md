@@ -88,7 +88,7 @@ flowchart TB
 | **Local LLM** (qwen2.5:14b through Ollama) | Questions never leave the machine (GDPR-friendly), no cost per request, reproducible results | Quality is limited by model size: 76% correct, 33% complete (hosted models were not tested) |
 | **14B instead of 7B model** | Removed invented citation numbers (6 → 0) and fixed broken German | 1.8× latency, ~9 GB of memory |
 | **Abstention sentence chosen in code** (language detection) | The 7B model answered German questions with the English refusal | Only DE and EN are supported |
-| **Official Cellar API** instead of scraping EUR-Lex | EUR-Lex shows bot checks to scripts; the Publications Office provides the API for automated reuse | Depends on one public service being available |
+| **Official Cellar API** instead of scraping EUR-Lex | EUR-Lex shows bot checks to scripts; the Publications Office provides the API for automated reuse. The server redirects even https to plain http, so the downloader upgrades every redirect to https and checks each file against `data/sources.sha256` | Depends on one public service; a new official version must be reviewed and its checksum recorded (`--update-manifest`) |
 | **Metadata-only request log** | Users may type personal data into questions; data minimisation (GDPR Art. 5(1)(c)) | Debugging relies on the eval set instead of production questions |
 
 ## Quickstart
