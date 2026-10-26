@@ -14,16 +14,19 @@ from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
-from openai import OpenAIError
+from openai import BadRequestError, OpenAIError
 from pydantic import BaseModel, Field
 
-from paragraf.generate import answer, detect_language
+from paragraf.generate import Answer, answer, detect_language
 from paragraf.retrieve import Retriever
 
 log = logging.getLogger("paragraf")
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 STATIC = Path(__file__).resolve().parents[2] / "static"
 _lock = threading.Lock()                     # the embedding models are not safe to call from many threads
+# Shown when a security gateway in front of the LLM (Warden) refuses the request.
+BLOCKED = {"en": "This request was blocked by the security policy.",
+           "de": "Diese Anfrage wurde durch die Sicherheitsrichtlinie blockiert."}
 
 
 @asynccontextmanager
@@ -56,6 +59,7 @@ class AskResponse(BaseModel):
     answer: str
     sources: list[Source]
     abstained: bool
+    blocked: bool = False
     invalid_citations: list[int]
     timings_ms: dict[str, float]
 
@@ -71,8 +75,16 @@ def ask(req: AskRequest, request: Request) -> AskResponse:
     with _lock:
         hits = request.app.state.retriever.search(req.question, mode=req.mode)
     t1 = time.perf_counter()
+    blocked, gateway_id = False, None
     try:
         result = answer(req.question, hits)
+    except BadRequestError as exc:
+        if getattr(exc, "type", None) != "warden_blocked":
+            log.error(json.dumps({"event": "llm_error", "error": type(exc).__name__}))
+            raise HTTPException(502, "The language model rejected the request.") from exc
+        gateway_id = exc.response.headers.get("x-warden-request-id")
+        blocked, hits = True, []                 # nothing was answered from the sources
+        result = Answer(BLOCKED[detect_language(req.question)], [], [], False)
     except OpenAIError as exc:
         log.error(json.dumps({"event": "llm_error", "error": type(exc).__name__}))
         raise HTTPException(503, "The language model is not reachable. Is Ollama running?") from exc
@@ -82,7 +94,8 @@ def ask(req: AskRequest, request: Request) -> AskResponse:
                "total": round((t2 - t0) * 1000)}
     log.info(json.dumps({"event": "ask", "lang": detect_language(req.question), "chars": len(req.question),
                          "mode": req.mode, "sources": len(hits), "cited": len(result.cited),
-                         "abstained": result.abstained, "invalid_citations": len(result.invalid_citations),
+                         "abstained": result.abstained, "blocked": blocked, "gateway_request_id": gateway_id,
+                         "invalid_citations": len(result.invalid_citations),
                          **{f"ms_{k}": v for k, v in timings.items()}}))
     return AskResponse(
         answer=result.text,
@@ -90,6 +103,7 @@ def ask(req: AskRequest, request: Request) -> AskResponse:
                         url=f"{h.url}#art_{h.article}", cited=i in result.cited)
                  for i, h in enumerate(hits, start=1)],
         abstained=result.abstained,
+        blocked=blocked,
         invalid_citations=result.invalid_citations,
         timings_ms=timings,
     )

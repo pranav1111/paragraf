@@ -56,3 +56,23 @@ def test_log_contains_metadata_but_never_the_question(client, caplog):
 def test_index_page_is_served(client):
     res = client.get("/")
     assert res.status_code == 200 and "<title>Paragraf</title>" in res.text
+
+
+def test_a_request_blocked_by_the_gateway_gets_a_polite_answer(client, monkeypatch, caplog):
+    import httpx
+    import openai
+
+    def blocked(question, hits):
+        response = httpx.Response(400, headers={"X-Warden-Request-Id": "abc123def456"},
+                                  request=httpx.Request("POST", "http://warden/v1/chat/completions"))
+        raise openai.BadRequestError("Request blocked by security policy.", response=response,
+                                     body={"message": "Request blocked by security policy.", "type": "warden_blocked",
+                                           "code": "heuristics"})
+
+    monkeypatch.setattr(api, "answer", blocked)
+    with caplog.at_level(logging.INFO, logger="paragraf"):
+        data = client.post("/ask", json={"question": QUESTION}).json()
+    assert data["blocked"] is True and data["sources"] == []
+    assert data["answer"] == "Diese Anfrage wurde durch die Sicherheitsrichtlinie blockiert."
+    record = json.loads([r.message for r in caplog.records if r.name == "paragraf"][-1])
+    assert record["blocked"] is True and record["gateway_request_id"] == "abc123def456"

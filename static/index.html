@@ -78,6 +78,7 @@ $("form").addEventListener("submit", async (e) => {
     const data = await res.json();
     const card = el("div", "card");
     if (data.abstained) card.append(el("span", "badge", "Not covered by the indexed laws"));
+    if (data.blocked) card.append(el("span", "badge", "Blocked by the security policy"));
     card.append(renderAnswer(data.answer));
     const list = el("ol");
     for (const s of data.sources) {
