@@ -145,6 +145,7 @@ Every setting can be overridden with an environment variable or a `.env` file (s
 | `PARAGRAF_DEVICE` | `mps` | `mps` (Apple GPU), `cuda` or `cpu` for embeddings and reranking |
 | `PARAGRAF_CANDIDATES` / `PARAGRAF_TOP_K` | `30` / `5` | Candidates before reranking / sources sent to the LLM |
 | `PARAGRAF_PROMPT_VERSION` | `v1` | `v2` is the documented (worse) experiment |
+| `PARAGRAF_PROMPT_CANARY` | (empty) | Red-team test hook: a secret marker added to the system prompt, so that [Warden](https://github.com/pranav1111/warden) can detect prompt leaks |
 
 ## Evaluation
 

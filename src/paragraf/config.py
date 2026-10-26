@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     prompt_version: str = "v1"               # generation prompt (see generate.py); v2 = completeness/citation fix
     candidates: int = 30                     # size of the hybrid candidate list
     top_k: int = 5                           # sources sent to the LLM after reranking
+    prompt_canary: str = ""                  # red-team test hook (Warden): a secret marker in the system prompt
 
 
 settings = Settings()
